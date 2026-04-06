@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
+<html lang="zh-TW"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShiFu UTM 產生器</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Mono:wght@400;500&amp;family=Noto+Sans+TC:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f4ef;
@@ -423,7 +421,7 @@
 
     <div class="campaign-box">
       <div style="font-size:11px; color:var(--text-muted);">Campaign 預覽</div>
-      <div class="campaign-preview" id="campaignPreview">—</div>
+      <div class="campaign-preview" id="campaignPreview">0406</div>
     </div>
   </div>
 
@@ -434,8 +432,8 @@
     <div class="output-url empty" id="outputUrl">填完上方選項後，連結會自動出現這裡 ✦</div>
 
     <div class="btn-row">
-      <button class="btn btn-primary" id="copyBtn" onclick="copyUrl()" disabled>⎘ 複製連結</button>
-      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()" disabled>⚡ 建立 Lihi 短網址</button>
+      <button class="btn btn-primary" id="copyBtn" onclick="copyUrl()" disabled="">⎘ 複製連結</button>
+      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()" disabled="">⚡ 建立 Lihi 短網址</button>
       <button class="btn btn-secondary" onclick="resetAll()">↺ 清除重填</button>
     </div>
 
@@ -451,7 +449,7 @@
   <!-- History -->
   <div class="panel full" id="historyPanel">
     <div class="panel-title" style="cursor:pointer" onclick="toggleHistory()">最近產出 <span id="historyToggle" style="margin-left:auto; font-size:10px;">▼</span></div>
-    <div id="historyList"></div>
+    <div id="historyList"><div class="history-empty">尚無紀錄</div></div>
   </div>
 
 </div>
@@ -728,11 +726,11 @@ async function createLihi() {
 
   // Proxy 不通，直接呼叫 Lihi API（需工具已發布到正式域名）
   try {
-    const res = await fetch('https://api.lihi.io/v1/url', {
+    const res = await fetch('https://app.lihi.io/v1/url', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + TOKEN
+        'Authorization': 'x-api-key:' + TOKEN
       },
       body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
     });
@@ -829,5 +827,6 @@ document.getElementById('campDate').value = mm + dd;
 state.campDate = mm + dd;
 generate();
 </script>
-</body>
-</html>
+
+
+</body><mapify-window data-wxt-shadow-root="" style="position: relative; z-index: calc(infinity);"></mapify-window></html>
