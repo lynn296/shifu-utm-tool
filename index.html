@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShiFu UTM 產生器</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #ddd9d0;
+    --accent: #d97757;
+    --accent2: #c96442;
+    --text: #1a1916;
+    --text-muted: #8a8070;
+    --green: #1a7f5a;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 700;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .header {
+    max-width: 900px;
+    margin: 0 auto 36px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--text-muted); font-weight: 400; }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .panel.full { grid-column: 1 / -1; }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .required::after { content: ' *'; color: var(--accent); }
+
+  .field { margin-bottom: 14px; }
+
+  input[type="text"], input[type="url"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: #404060; }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* Campaign section special */
+  .campaign-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .campaign-preview {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    margin-top: 8px;
+    min-height: 20px;
+    word-break: break-all;
+  }
+
+  .campaign-parts {
+    display: grid;
+    grid-template-columns: 70px 1fr 1fr;
+    gap: 8px;
+    align-items: end;
+  }
+
+  /* Output section */
+  .output-url {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    word-break: break-all;
+    line-height: 1.7;
+    min-height: 60px;
+    position: relative;
+  }
+
+  .output-url.empty { color: var(--text-muted); font-style: italic; }
+
+  .url-highlight { color: #b34a1a; }
+  .url-param { color: #7c6ff7; }
+  .url-value { color: #1a7f5a; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: 'Noto Sans TC', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #ff7050; }
+
+  .btn-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-lihi {
+    background: linear-gradient(135deg, #7c6ff7, #9b8cf9);
+    color: white;
+  }
+  .btn-lihi:hover { opacity: 0.9; }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1a7f5a;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--accent); color: white; }
+
+  /* Lihi result */
+  .lihi-result {
+    margin-top: 10px;
+    background: var(--surface2);
+    border: 1px solid #b8b0f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: none;
+  }
+  .lihi-result.show { display: block; }
+  .lihi-result label { color: #6b5fd4; }
+  .lihi-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: #5b4fc9;
+    word-break: break-all;
+    margin-top: 4px;
+  }
+
+  /* Medium combos */
+  .medium-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    margin-top: 10px;
+  }
+
+  /* History */
+  .history-item {
+    padding: 10px;
+    background: var(--surface2);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    word-break: break-all;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .history-item:hover { border-color: var(--accent); color: var(--text); }
+  .history-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px 0; }
+
+  @media (max-width: 640px) {
+    .container { grid-template-columns: 1fr; }
+    .panel.full { grid-column: 1; }
+    .campaign-parts { grid-template-columns: 60px 1fr; }
+    .campaign-parts .field:nth-child(3) { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Left: Base URL + Source/Medium -->
+  <div class="panel">
+    <div class="panel-title">基本設定</div>
+
+    <div class="field">
+      <label class="required">目標網址</label>
+      <input type="url" id="baseUrl" placeholder="https://shifu.tw/courses/xxx?affcode=..." oninput="generate()">
+    </div>
+
+    <div class="field">
+      <label class="required">Source（來源）</label>
+      <div class="chip-group" id="sourceChips">
+        <div class="chip" data-val="fb" onclick="selectChip(this,'source')">fb</div>
+        <div class="chip" data-val="ig" onclick="selectChip(this,'source')">ig</div>
+        <div class="chip" data-val="th" onclick="selectChip(this,'source')">th</div>
+        <div class="chip" data-val="dc" onclick="selectChip(this,'source')">dc</div>
+        <div class="chip" data-val="kol" onclick="selectChip(this,'source')">kol</div>
+        <div class="chip" data-val="yt" onclick="selectChip(this,'source')">yt</div>
+        <div class="chip" data-val="google" onclick="selectChip(this,'source')">google</div>
+        <div class="chip" data-val="line" onclick="selectChip(this,'source')">line</div>
+        <div class="chip" data-val="edm" onclick="selectChip(this,'source')">edm</div>
+        <div class="chip" data-val="sms" onclick="selectChip(this,'source')">sms</div>
+        <div class="chip" data-val="event" onclick="selectChip(this,'source')">event</div>
+      </div>
+    </div>
+
+    <div class="field" id="mediumField">
+      <label class="required">Medium（媒介）</label>
+      <div class="chip-group" id="mediumChips"></div>
+      <div class="medium-note" id="mediumNote"></div>
+    </div>
+  </div>
+
+  <!-- Right: Campaign builder -->
+  <div class="panel">
+    <div class="panel-title">Campaign（活動）= Affcode</div>
+
+    <div class="campaign-parts">
+      <div class="field">
+        <label>日期</label>
+        <input type="text" id="campDate" placeholder="0426" maxlength="4" oninput="generate()" style="font-family:'DM Mono',monospace;">
+      </div>
+      <div class="field">
+        <label>專案代號 <span style="color:var(--accent)">*</span></label>
+        <div class="chip-group" id="projectChips" style="margin-bottom:6px;">
+          <div class="chip" data-val="rich" onclick="selectChip(this,'project')">rich</div>
+          <div class="chip" data-val="joey_short" onclick="selectChip(this,'project')">joey_short</div>
+          <div class="chip" data-val="Hgym" onclick="selectChip(this,'project')">Hgym</div>
+          <div class="chip" data-val="superai" onclick="selectChip(this,'project')">superai</div>
+          <div class="chip" data-val="paddy" onclick="selectChip(this,'project')">paddy</div>
+          <div class="chip" data-val="rifat" onclick="selectChip(this,'project')">rifat</div>
+          <div class="chip" data-val="simple" onclick="selectChip(this,'project')">simple</div>
+          <div class="chip" data-val="stock-ta" onclick="selectChip(this,'project')">stock-ta</div>
+          <div class="chip" data-val="freedom" onclick="selectChip(this,'project')">freedom</div>
+        </div>
+        <input type="text" id="campProject" placeholder="自訂..." oninput="syncCustomProject()" style="font-size:12px;">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>來源（Campaign 內的來源）</label>
+      <div class="chip-group" id="campSourceChips">
+        <div class="chip" data-val="fb" onclick="selectChip(this,'campsrc')">fb</div>
+        <div class="chip" data-val="ig" onclick="selectChip(this,'campsrc')">ig</div>
+        <div class="chip" data-val="kol_名字" data-is-kol="true" onclick="selectChip(this,'campsrc')">kol_名字</div>
+        <div class="chip" data-val="th" onclick="selectChip(this,'campsrc')">th</div>
+        <div class="chip" data-val="yt" onclick="selectChip(this,'campsrc')">yt</div>
+        <div class="chip" data-val="google" onclick="selectChip(this,'campsrc')">google</div>
+        <div class="chip" data-val="line" onclick="selectChip(this,'campsrc')">line</div>
+        <div class="chip" data-val="edm" onclick="selectChip(this,'campsrc')">edm</div>
+        <div class="chip" data-val="sms" onclick="selectChip(this,'campsrc')">sms</div>
+        <div class="chip" data-val="dc" onclick="selectChip(this,'campsrc')">dc</div>
+      </div>
+      <div id="kolNameField" style="display:none; margin-top:8px;">
+        <input type="text" id="kolNameInput" placeholder="輸入 KOL 名字，例如：jenny" oninput="onKolNameInput()" style="font-size:12px; width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Mono',monospace; padding:10px 12px; outline:none;">
+        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">組合結果：kol_<span id="kolNamePreview" style="color:var(--accent2)">名字</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>形式</label>
+      <div class="chip-group" id="formatChips">
+        <div class="chip" data-val="trailer" onclick="selectChip(this,'format')">trailer 預告片</div>
+        <div class="chip" data-val="shorts" onclick="selectChip(this,'format')">shorts 短影音</div>
+        <div class="chip" data-val="preview" onclick="selectChip(this,'format')">preview 試看片</div>
+        <div class="chip" data-val="ppal" onclick="selectChip(this,'format')">ppal 單圖</div>
+        <div class="chip" data-val="post" onclick="selectChip(this,'format')">post 組圖</div>
+        <div class="chip" data-val="video" onclick="selectChip(this,'format')">video 影片</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>內容</label>
+      <div class="chip-group" id="contentChips">
+        <div class="chip" data-val="story-success" onclick="selectChip(this,'content')">story-success</div>
+        <div class="chip" data-val="story-case" onclick="selectChip(this,'content')">story-case</div>
+        <div class="chip" data-val="know-one" onclick="selectChip(this,'content')">know-one</div>
+        <div class="chip" data-val="know-multi" onclick="selectChip(this,'content')">know-multi</div>
+        <div class="chip" data-val="countdown" onclick="selectChip(this,'content')">countdown</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>其他備註（選填）</label>
+      <input type="text" id="campExtra" placeholder="title1, v2, ..." oninput="generate()">
+    </div>
+
+    <div class="campaign-box">
+      <div style="font-size:11px; color:var(--text-muted);">Campaign 預覽</div>
+      <div class="campaign-preview" id="campaignPreview">—</div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="panel full">
+    <div class="panel-title">產出結果</div>
+
+    <div class="output-url empty" id="outputUrl">填完上方選項後，連結會自動出現這裡 ✦</div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="copyBtn" onclick="copyUrl()" disabled>⎘ 複製連結</button>
+      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()" disabled>⚡ 建立 Lihi 短網址</button>
+      <button class="btn btn-secondary" onclick="resetAll()">↺ 清除重填</button>
+    </div>
+
+    <div class="lihi-result" id="lihiResult">
+      <label>Lihi 短網址</label>
+      <div class="lihi-url" id="lihiUrl">—</div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn btn-secondary" style="font-size:12px;" onclick="copyLihi()">複製短網址</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="panel full" id="historyPanel">
+    <div class="panel-title" style="cursor:pointer" onclick="toggleHistory()">最近產出 <span id="historyToggle" style="margin-left:auto; font-size:10px;">▼</span></div>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// State
+const state = {
+  source: '',
+  medium: '',
+  campDate: '',
+  campProject: '',
+  campsrc: '',
+  format: '',
+  content: '',
+  campExtra: '',
+  baseUrl: ''
+};
+
+// Medium map
+const mediumMap = {
+  fb: [
+    { val: 'ads', label: 'ads（廣告）' },
+    { val: 'post', label: 'post（自然發文）' }
+  ],
+  ig: [
+    { val: 'post', label: 'post（自然發文）' },
+    { val: 'ads', label: 'ads（廣告）' }
+  ],
+  th: [
+    { val: 'post', label: 'post（自然發文）' }
+  ],
+  dc: [
+    { val: 'post', label: 'post（自然發文）' }
+  ],
+  kol: [
+    { val: 'podcast', label: 'podcast' },
+    { val: 'fb', label: 'fb' },
+    { val: 'ig', label: 'ig' },
+    { val: 'yt', label: 'yt' }
+  ],
+  yt: [
+    { val: 'post', label: 'post（自然發文）' },
+    { val: 'ads', label: 'ads（廣告）' },
+    { val: 'profile', label: 'profile（頻道簡介）' }
+  ],
+  google: [
+    { val: 'cpc', label: 'cpc' }
+  ],
+  line: [
+    { val: 'push', label: 'push' }
+  ],
+  edm: [
+    { val: 'push', label: 'push' }
+  ],
+  sms: [
+    { val: 'push', label: 'push' }
+  ],
+  event: [
+    { val: 'event', label: 'event' }
+  ]
+};
+
+function selectChip(el, type) {
+  const group = el.closest('.chip-group');
+  group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state[type] = el.dataset.val;
+
+  if (type === 'source') {
+    updateMediumChips(state.source);
+    state.medium = '';
+    // 連動 Campaign 來源：自動選中對應 chip，或顯示 KOL 輸入框
+    syncCampSrcToSource(state.source);
+  }
+
+  if (type === 'campsrc') {
+    // 手動覆蓋時也處理 KOL 邏輯
+    const isKol = el.dataset.isKol === 'true';
+    const kolField = document.getElementById('kolNameField');
+    if (isKol) {
+      kolField.style.display = 'block';
+      setTimeout(() => document.getElementById('kolNameInput').focus(), 50);
+      const existingName = document.getElementById('kolNameInput').value.trim();
+      state.campsrc = existingName ? 'kol_' + existingName : '';
+    } else {
+      kolField.style.display = 'none';
+      document.getElementById('kolNameInput').value = '';
+    }
+  }
+
+  if (type === 'project') {
+    document.getElementById('campProject').value = el.dataset.val;
+    state.campProject = el.dataset.val;
+  }
+  generate();
+}
+
+function onKolNameInput() {
+  const name = document.getElementById('kolNameInput').value.trim();
+  document.getElementById('kolNamePreview').textContent = name || '名字';
+  state.campsrc = name ? 'kol_' + name : '';
+  generate();
+}
+
+function syncCampSrcToSource(src) {
+  const campsrcChips = document.querySelectorAll('#campSourceChips .chip');
+  const kolField = document.getElementById('kolNameField');
+  const kolInput = document.getElementById('kolNameInput');
+
+  if (src === 'kol') {
+    // KOL: 取消所有 chip 選取，顯示輸入框
+    campsrcChips.forEach(c => c.classList.remove('active'));
+    kolField.style.display = 'block';
+    setTimeout(() => kolInput.focus(), 50);
+    const existingName = kolInput.value.trim();
+    state.campsrc = existingName ? 'kol_' + existingName : '';
+  } else {
+    // 其他: 隱藏輸入框，自動選中對應 chip
+    kolField.style.display = 'none';
+    kolInput.value = '';
+    document.getElementById('kolNamePreview').textContent = '名字';
+    let matched = false;
+    campsrcChips.forEach(c => {
+      c.classList.remove('active');
+      if (c.dataset.val === src && !c.dataset.isKol) {
+        c.classList.add('active');
+        state.campsrc = src;
+        matched = true;
+      }
+    });
+    if (!matched) state.campsrc = src; // fallback
+  }
+}
+
+function updateMediumChips(src) {
+  const container = document.getElementById('mediumChips');
+  container.innerHTML = '';
+  const options = mediumMap[src] || [];
+  if (options.length === 0) {
+    container.innerHTML = '<span class="chip" style="opacity:0.4">—</span>';
+    return;
+  }
+  options.forEach(opt => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.val = opt.val;
+    chip.textContent = opt.label;
+    chip.onclick = function() { selectChip(this, 'medium'); };
+    container.appendChild(chip);
+  });
+  // auto select first if only one
+  if (options.length === 1) {
+    container.querySelector('.chip').classList.add('active');
+    state.medium = options[0].val;
+  }
+}
+
+function syncCustomProject() {
+  const val = document.getElementById('campProject').value;
+  state.campProject = val;
+  // deactivate preset chips if user typed custom
+  document.querySelectorAll('#projectChips .chip').forEach(c => c.classList.remove('active'));
+  generate();
+}
+
+function buildCampaign() {
+  const parts = [];
+  if (state.campDate) parts.push(state.campDate);
+  if (state.campProject) parts.push(state.campProject);
+  if (state.campsrc) parts.push(state.campsrc);
+  if (state.format) parts.push(state.format);
+  if (state.content) parts.push(state.content);
+  if (state.campExtra) parts.push(state.campExtra);
+  return parts.join('_');
+}
+
+function generate() {
+  state.baseUrl = document.getElementById('baseUrl').value.trim();
+  state.campDate = document.getElementById('campDate').value.trim();
+  state.campProject = document.getElementById('campProject').value.trim();
+  state.campExtra = document.getElementById('campExtra').value.trim();
+
+  const campaign = buildCampaign();
+  document.getElementById('campaignPreview').textContent = campaign || '—';
+
+  if (!state.baseUrl || !state.source || !state.medium || !state.campProject) {
+    document.getElementById('outputUrl').textContent = '填完上方選項後，連結會自動出現這裡 ✦';
+    document.getElementById('outputUrl').className = 'output-url empty';
+    document.getElementById('copyBtn').disabled = true;
+    document.getElementById('lihiBtn').disabled = true;
+    return;
+  }
+
+  // Build URL
+  let base = state.baseUrl;
+  // Remove existing UTM params to avoid duplication
+  base = base.replace(/[?&]utm_[^&]*/g, '').replace(/[?&]affcode=[^&]*/g, '');
+  // Clean trailing ? or &
+  base = base.replace(/[?&]+$/, '');
+
+  const separator = base.includes('?') ? '&' : '?';
+  const params = `affcode=${campaign}&utm_source=${state.source}&utm_medium=${state.medium}&utm_campaign=${campaign}`;
+  const fullUrl = base + separator + params;
+
+  // Render with highlights
+  const el = document.getElementById('outputUrl');
+  el.className = 'output-url';
+  el.innerHTML = highlightUrl(fullUrl);
+
+  document.getElementById('copyBtn').disabled = false;
+  document.getElementById('lihiBtn').disabled = false;
+}
+
+function highlightUrl(url) {
+  const [base, query] = url.split('?');
+  if (!query) return `<span class="url-highlight">${url}</span>`;
+  const params = query.split('&').map(p => {
+    const [k, v] = p.split('=');
+    return `<span class="url-param">${k}</span>=<span class="url-value">${v}</span>`;
+  }).join('<span style="color:var(--text-muted)">&</span>');
+  return `<span class="url-highlight">${base}</span><span style="color:var(--text-muted)">?</span>${params}`;
+}
+
+function getFullUrl() {
+  let base = document.getElementById('baseUrl').value.trim();
+  base = base.replace(/[?&]utm_[^&]*/g, '').replace(/[?&]affcode=[^&]*/g, '').replace(/[?&]+$/, '');
+  const campaign = buildCampaign();
+  const separator = base.includes('?') ? '&' : '?';
+  return base + separator + `affcode=${campaign}&utm_source=${state.source}&utm_medium=${state.medium}&utm_campaign=${campaign}`;
+}
+
+function copyUrl() {
+  const url = getFullUrl();
+  navigator.clipboard.writeText(url).then(() => showToast('✓ 已複製連結！'));
+  saveHistory(url);
+}
+
+async function createLihi() {
+  const url = getFullUrl();
+  const btn = document.getElementById('lihiBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ 建立中...';
+
+  // 用 shifu-toolbox proxy 轉發，繞過 CORS
+  const PROXY = 'https://shifu-toolbox-mcp.shifu-tw.workers.dev/lihi';
+  const TOKEN = 'pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R';
+
+  try {
+    const res = await fetch(PROXY, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Lihi-Token': TOKEN
+      },
+      body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const shortUrl = data.url || data.short_url;
+      if (shortUrl) {
+        document.getElementById('lihiResult').className = 'lihi-result show';
+        document.getElementById('lihiUrl').textContent = shortUrl;
+        saveHistory(url, shortUrl);
+        showToast('⚡ Lihi 短網址建立成功！');
+        btn.disabled = false;
+        btn.innerHTML = '⚡ 建立 Lihi 短網址';
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Proxy 不通，直接呼叫 Lihi API（需工具已發布到正式域名）
+  try {
+    const res = await fetch('https://api.lihi.io/v1/url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
+    });
+
+    const data = await res.json();
+    const shortUrl = data.url || data.short_url;
+
+    if (shortUrl) {
+      document.getElementById('lihiResult').className = 'lihi-result show';
+      document.getElementById('lihiUrl').textContent = shortUrl;
+      saveHistory(url, shortUrl);
+      showToast('⚡ Lihi 短網址建立成功！');
+    } else {
+      throw new Error(data.message || JSON.stringify(data));
+    }
+  } catch(e) {
+    // 最後備案：開 Lihi 網頁讓使用者手動貼
+    const encoded = encodeURIComponent(url);
+    window.open('https://app.lihi.io/admin/links/create?url=' + encoded, '_blank');
+    showToast('⚠️ 已開啟 Lihi，請手動確認建立', true);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⚡ 建立 Lihi 短網址';
+}
+
+function copyLihi() {
+  const url = document.getElementById('lihiUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✓ 已複製短網址！'));
+}
+
+function resetAll() {
+  document.getElementById('baseUrl').value = '';
+  document.getElementById('campDate').value = '';
+  document.getElementById('campProject').value = '';
+  document.getElementById('campExtra').value = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('mediumChips').innerHTML = '';
+  document.getElementById('lihiResult').className = 'lihi-result';
+  Object.keys(state).forEach(k => state[k] = '');
+  document.getElementById('outputUrl').textContent = '填完上方選項後，連結會自動出現這裡 ✦';
+  document.getElementById('outputUrl').className = 'output-url empty';
+  document.getElementById('campaignPreview').textContent = '—';
+  document.getElementById('copyBtn').disabled = true;
+  document.getElementById('lihiBtn').disabled = true;
+}
+
+// History
+function saveHistory(url, short) {
+  const h = JSON.parse(localStorage.getItem('utm_history') || '[]');
+  h.unshift({ url, short, ts: Date.now() });
+  if (h.length > 8) h.pop();
+  localStorage.setItem('utm_history', JSON.stringify(h));
+  renderHistory();
+}
+
+function renderHistory() {
+  const h = JSON.parse(localStorage.getItem('utm_history') || '[]');
+  const el = document.getElementById('historyList');
+  if (!h.length) {
+    el.innerHTML = '<div class="history-empty">尚無紀錄</div>';
+    return;
+  }
+  el.innerHTML = h.map(item => `
+    <div class="history-item" onclick="navigator.clipboard.writeText('${item.short || item.url}').then(()=>showToast('複製成功'))">
+      ${item.short ? `<span style="color:#a78bfa">${item.short}</span> → ` : ''}
+      <span style="opacity:0.7">${item.url.substring(0, 100)}${item.url.length > 100 ? '...' : ''}</span>
+    </div>
+  `).join('');
+}
+
+let historyOpen = true;
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  document.getElementById('historyList').style.display = historyOpen ? 'block' : 'none';
+  document.getElementById('historyToggle').textContent = historyOpen ? '▼' : '▶';
+}
+
+function showToast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+
+// Init
+renderHistory();
+
+// Pre-fill date with current MMDD
+const now = new Date();
+const mm = String(now.getMonth() + 1).padStart(2, '0');
+const dd = String(now.getDate()).padStart(2, '0');
+document.getElementById('campDate').value = mm + dd;
+state.campDate = mm + dd;
+generate();
+</script>
+</body>
+</html>
