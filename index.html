@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShiFu UTM 產生器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 700;
+    background: #f5f4ef;
+    color: #1a1a1a;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 8px;
+    display: block;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e5e0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    background: #fafaf8;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    border-color: #c4a87c;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 2px solid #e5e5e0;
+    background: #fafaf8;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #555;
+    user-select: none;
+  }
+  .chip:hover { border-color: #c4a87c; color: #1a1a1a; }
+  .chip.active {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+  }
+  .chip.active:hover { background: #333; border-color: #333; }
+  .output-section {
+    max-width: 1100px;
+    margin: 20px auto 0;
+  }
+  .output-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .url-preview {
+    background: #fafaf8;
+    border: 2px solid #e5e5e0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    word-break: break-all;
+    line-height: 1.7;
+    font-weight: 700;
+    min-height: 44px;
+  }
+  .url-preview .param-source { color: #e07c3e; }
+  .url-preview .param-medium { color: #7c3ebd; }
+  .url-preview .param-campaign { color: #2e8b57; }
+  .url-preview .param-base { color: #888; }
+  .buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: #1a1a1a;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #333; }
+  .btn-secondary {
+    background: #f0efe9;
+    color: #1a1a1a;
+    border: 2px solid #e5e5e0;
+  }
+  .btn-secondary:hover { background: #e5e4de; }
+  .btn-lihi {
+    background: #2e8b57;
+    color: #fff;
+  }
+  .btn-lihi:hover { background: #267a4a; }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .lihi-result {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: #f0faf4;
+    border: 2px solid #b5e2c8;
+    border-radius: 10px;
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    word-break: break-all;
+  }
+  .lihi-result.show { display: flex; }
+  .lihi-result a {
+    color: #2e8b57;
+    text-decoration: none;
+  }
+  .lihi-result a:hover { text-decoration: underline; }
+  .lihi-copy-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #2e8b57;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .history-section {
+    margin-top: 20px;
+  }
+  .history-title {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .history-item {
+    padding: 10px 14px;
+    background: #fafaf8;
+    border: 1px solid #e5e5e0;
+    border-radius: 8px;
+    font-size: 12px;
+    word-break: break-all;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1.5;
+  }
+  .history-item:hover { background: #f0efe9; }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .kol-input-wrap {
+    display: none;
+    margin-top: 8px;
+  }
+  .kol-input-wrap.show { display: block; }
+  .campaign-source-auto {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: #e8e8e3;
+    font-size: 13px;
+    color: #1a1a1a;
+  }
+  .custom-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .custom-input-row input {
+    flex: 1;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+  .lihi-error {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #fdf0f0;
+    border: 2px solid #e8b4b4;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #a33;
+    display: none;
+  }
+  .lihi-error.show { display: block; }
+  @media (max-width: 768px) {
+    body { padding: 14px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid">
+  <!-- 左側：基本設定 -->
+  <div class="card">
+    <div class="card-title">基本設定</div>
+
+    <div class="field">
+      <label class="field-label">目標網址</label>
+      <input type="text" id="baseUrl" value="https://shifu.tw/courses/" placeholder="https://shifu.tw/courses/xxx">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Source（來源）</label>
+      <div class="chips" id="sourceChips"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Medium（媒介）</label>
+      <div class="chips" id="mediumChips"></div>
+    </div>
+  </div>
+
+  <!-- 右側：Campaign 設定 -->
+  <div class="card">
+    <div class="card-title">Campaign 設定</div>
+
+    <div class="field">
+      <label class="field-label">日期（4 碼）</label>
+      <input type="text" id="dateInput" maxlength="4" placeholder="0426">
+    </div>
+
+    <div class="field">
+      <label class="field-label">專案代號</label>
+      <div class="chips" id="projectChips"></div>
+      <div class="custom-input-row">
+        <input type="text" id="projectCustom" placeholder="自訂專案代號">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Campaign 來源</label>
+      <div id="campaignSourceDisplay">
+        <span class="campaign-source-auto" id="campaignSourceAuto">—</span>
+      </div>
+      <div class="kol-input-wrap" id="kolWrap">
+        <input type="text" id="kolName" placeholder="輸入 KOL 名字">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">形式（選填）</label>
+      <div class="chips" id="formatChips"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">內容（選填）</label>
+      <div class="chips" id="contentChips"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">其他備註（選填）</label>
+      <input type="text" id="noteInput" placeholder="自由輸入">
+    </div>
+  </div>
+</div>
+
+<!-- 輸出區 -->
+<div class="output-section">
+  <div class="output-card">
+    <div class="field-label" style="margin-bottom:10px;">完整 UTM 網址預覽</div>
+    <div class="url-preview" id="urlPreview"></div>
+
+    <div class="buttons">
+      <button class="btn btn-primary" onclick="copyUrl()">複製網址</button>
+      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()">建立 Lihi 短網址</button>
+      <button class="btn btn-secondary" onclick="resetAll()">清除重填</button>
+    </div>
+
+    <div class="lihi-result" id="lihiResult">
+      <span>短網址：<a id="lihiUrl" href="#" target="_blank"></a></span>
+      <button class="lihi-copy-btn" onclick="copyLihi()">複製</button>
+    </div>
+    <div class="lihi-error" id="lihiError"></div>
+
+    <div class="history-section">
+      <div class="history-title">
+        <span>最近紀錄</span>
+        <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="clearHistory()">清除紀錄</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SOURCES = ['fb','ig','th','dc','kol','yt','google','line','edm','sms','event'];
+const SOURCE_MEDIUMS = {
+  fb: ['ads','post'],
+  ig: ['post','ads'],
+  th: ['post'],
+  dc: ['post'],
+  kol: ['podcast','fb','ig','yt'],
+  yt: ['post','ads','profile'],
+  google: ['cpc'],
+  line: ['push'],
+  edm: ['push'],
+  sms: ['push'],
+  event: ['event']
+};
+const PROJECTS = ['rich','joey_short','Hgym','superai','paddy','rifat','simple','stock-ta','freedom'];
+const FORMATS = ['trailer','shorts','preview','ppal','post','video'];
+const CONTENTS = ['story-success','story-case','know-one','know-multi','countdown'];
+
+let state = {
+  source: '',
+  medium: '',
+  project: '',
+  format: '',
+  content: ''
+};
+
+// Init date
+const now = new Date();
+document.getElementById('dateInput').value =
+  String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+
+function renderChips(containerId, options, stateKey, allowDeselect) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  options.forEach(opt => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (state[stateKey] === opt ? ' active' : '');
+    chip.textContent = opt;
+    chip.onclick = () => {
+      if (allowDeselect && state[stateKey] === opt) {
+        state[stateKey] = '';
+      } else {
+        state[stateKey] = opt;
+      }
+      renderChips(containerId, options, stateKey, allowDeselect);
+      if (stateKey === 'source') onSourceChange();
+      updatePreview();
+    };
+    c.appendChild(chip);
+  });
+}
+
+function onSourceChange() {
+  const s = state.source;
+  const mediums = SOURCE_MEDIUMS[s] || [];
+  state.medium = mediums[0] || '';
+  renderChips('mediumChips', mediums, 'medium', false);
+
+  // Campaign source
+  const kolWrap = document.getElementById('kolWrap');
+  const autoLabel = document.getElementById('campaignSourceAuto');
+  if (s === 'kol') {
+    kolWrap.classList.add('show');
+    autoLabel.textContent = 'kol';
+  } else {
+    kolWrap.classList.remove('show');
+    document.getElementById('kolName').value = '';
+    autoLabel.textContent = s || '—';
+  }
+}
+
+function getCampaignSource() {
+  const s = state.source;
+  if (s === 'kol') {
+    const name = document.getElementById('kolName').value.trim();
+    return name ? 'kol_' + name : 'kol';
+  }
+  return s;
+}
+
+function getCampaign() {
+  const parts = [
+    document.getElementById('dateInput').value.trim(),
+    state.project || document.getElementById('projectCustom').value.trim(),
+    getCampaignSource(),
+    state.format,
+    state.content,
+    document.getElementById('noteInput').value.trim()
+  ];
+  return parts.filter(Boolean).join('_');
+}
+
+function getFullUrl() {
+  const base = document.getElementById('baseUrl').value.trim();
+  const campaign = getCampaign();
+  const source = state.source;
+  const medium = state.medium;
+  if (!base || !source || !campaign) return '';
+  return base + (base.includes('?') ? '&' : '?') +
+    'affcode=' + encodeURIComponent(campaign) +
+    '&utm_source=' + encodeURIComponent(source) +
+    '&utm_medium=' + encodeURIComponent(medium) +
+    '&utm_campaign=' + encodeURIComponent(campaign);
+}
+
+function updatePreview() {
+  const el = document.getElementById('urlPreview');
+  const base = document.getElementById('baseUrl').value.trim();
+  const campaign = getCampaign();
+  const source = state.source;
+  const medium = state.medium;
+
+  if (!source || !campaign) {
+    el.innerHTML = '<span style="color:#aaa;">請選擇 Source 並填寫 Campaign 欄位</span>';
+    return;
+  }
+
+  const sep = base.includes('?') ? '&' : '?';
+  el.innerHTML =
+    '<span class="param-base">' + escHtml(base) + sep + '</span>' +
+    'affcode=<span class="param-campaign">' + escHtml(campaign) + '</span>' +
+    '&amp;utm_source=<span class="param-source">' + escHtml(source) + '</span>' +
+    '&amp;utm_medium=<span class="param-medium">' + escHtml(medium) + '</span>' +
+    '&amp;utm_campaign=<span class="param-campaign">' + escHtml(campaign) + '</span>';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyUrl() {
+  const url = getFullUrl();
+  if (!url) return showToast('請先完成欄位填寫');
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('已複製！');
+    addHistory(url);
+  });
+}
+
+async function createLihi() {
+  const url = getFullUrl();
+  if (!url) return showToast('請先完成欄位填寫');
+  const btn = document.getElementById('lihiBtn');
+  const errEl = document.getElementById('lihiError');
+  btn.disabled = true;
+  btn.textContent = '建立中…';
+  errEl.classList.remove('show');
+
+  try {
+    const res = await fetch('https://app.lihi.io/api/v1/url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCvPy6S4aK9QO9tj2R'
+      },
+      body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
+    });
+    const data = await res.json();
+    if (data.result === 'success' && data.url) {
+      const lihiResult = document.getElementById('lihiResult');
+      const lihiUrlEl = document.getElementById('lihiUrl');
+      lihiUrlEl.href = data.url;
+      lihiUrlEl.textContent = data.url;
+      lihiResult.classList.add('show');
+      addHistory(url);
+    } else {
+      errEl.textContent = 'Lihi 回傳錯誤：' + (data.message || JSON.stringify(data));
+      errEl.classList.add('show');
+    }
+  } catch (e) {
+    errEl.textContent = '網路錯誤：' + e.message;
+    errEl.classList.add('show');
+  }
+  btn.disabled = false;
+  btn.textContent = '建立 Lihi 短網址';
+}
+
+function copyLihi() {
+  const url = document.getElementById('lihiUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('短網址已複製！'));
+}
+
+function addHistory(url) {
+  let hist = JSON.parse(localStorage.getItem('shifu_utm_history') || '[]');
+  hist = hist.filter(h => h !== url);
+  hist.unshift(url);
+  if (hist.length > 8) hist = hist.slice(0, 8);
+  localStorage.setItem('shifu_utm_history', JSON.stringify(hist));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const hist = JSON.parse(localStorage.getItem('shifu_utm_history') || '[]');
+  if (!hist.length) {
+    list.innerHTML = '<div style="color:#aaa;font-size:12px;">尚無紀錄</div>';
+    return;
+  }
+  list.innerHTML = hist.map(url =>
+    '<div class="history-item" onclick="copyHistoryItem(this)" data-url="' + escAttr(url) + '">' + escHtml(url) + '</div>'
+  ).join('');
+}
+
+function escAttr(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyHistoryItem(el) {
+  navigator.clipboard.writeText(el.dataset.url).then(() => showToast('已複製！'));
+}
+
+function clearHistory() {
+  localStorage.removeItem('shifu_utm_history');
+  renderHistory();
+}
+
+function resetAll() {
+  state = { source: '', medium: '', project: '', format: '', content: '' };
+  document.getElementById('baseUrl').value = 'https://shifu.tw/courses/';
+  const d = new Date();
+  document.getElementById('dateInput').value =
+    String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  document.getElementById('projectCustom').value = '';
+  document.getElementById('kolName').value = '';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('kolWrap').classList.remove('show');
+  document.getElementById('campaignSourceAuto').textContent = '—';
+  document.getElementById('lihiResult').classList.remove('show');
+  document.getElementById('lihiError').classList.remove('show');
+  renderChips('sourceChips', SOURCES, 'source', false);
+  renderChips('mediumChips', [], 'medium', false);
+  renderChips('projectChips', PROJECTS, 'project', false);
+  renderChips('formatChips', FORMATS, 'format', true);
+  renderChips('contentChips', CONTENTS, 'content', true);
+  updatePreview();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// Listen to inputs for live preview
+['baseUrl','dateInput','projectCustom','kolName','noteInput'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    if (id === 'projectCustom' && document.getElementById('projectCustom').value.trim()) {
+      state.project = '';
+      renderChips('projectChips', PROJECTS, 'project', false);
+    }
+    updatePreview();
+  });
+});
+
+// Init
+renderChips('sourceChips', SOURCES, 'source', false);
+renderChips('mediumChips', [], 'medium', false);
+renderChips('projectChips', PROJECTS, 'project', false);
+renderChips('formatChips', FORMATS, 'format', true);
+renderChips('contentChips', CONTENTS, 'content', true);
+updatePreview();
+renderHistory();
+</script>
+
+</body>
+</html>
