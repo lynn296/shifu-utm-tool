@@ -277,7 +277,7 @@
 
     <div class="field">
       <label class="field-label">目標網址</label>
-      <input type="text" id="baseUrl" value="https://shifu.tw/courses/" placeholder="https://shifu.tw/courses/xxx">
+      <input type="text" id="baseUrl" value="https://shifu.tw/course/details/" placeholder="https://shifu.tw/course/details/xxx">
     </div>
 
     <div class="field">
@@ -597,7 +597,7 @@ function clearHistory() {
 
 function resetAll() {
   state = { source: '', medium: '', project: '', format: '', content: '' };
-  document.getElementById('baseUrl').value = 'https://shifu.tw/courses/';
+  document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/';
   const d = new Date();
   document.getElementById('dateInput').value =
     String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
