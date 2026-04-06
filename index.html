@@ -140,6 +140,11 @@
     color: #fff;
   }
   .btn-lihi:hover { background: #267a4a; }
+  .btn-lihi-manual {
+    background: #c4a87c;
+    color: #fff;
+  }
+  .btn-lihi-manual:hover { background: #b09568; }
   .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -338,7 +343,8 @@
 
     <div class="buttons">
       <button class="btn btn-primary" onclick="copyUrl()">複製網址</button>
-      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()">建立 Lihi 短網址</button>
+      <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()">自動產出短連結</button>
+      <button class="btn btn-lihi-manual" id="lihiManualBtn" onclick="createLihiManual()">半自動短連結（可修改）</button>
       <button class="btn btn-secondary" onclick="resetAll()">清除重填</button>
     </div>
 
@@ -535,7 +541,19 @@ async function createLihi() {
     errEl.classList.add('show');
   }
   btn.disabled = false;
-  btn.textContent = '建立 Lihi 短網址';
+  btn.textContent = '自動產出短連結';
+}
+
+function createLihiManual() {
+  const url = getFullUrl();
+  if (!url) return showToast('請先完成欄位填寫');
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('已複製網址！正在開啟 Lihi 後台...');
+    addHistory(url);
+    setTimeout(() => {
+      window.open('https://app.lihi.io/admin', '_blank');
+    }, 500);
+  });
 }
 
 function copyLihi() {
