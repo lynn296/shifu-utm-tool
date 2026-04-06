@@ -694,39 +694,9 @@ async function createLihi() {
   const btn = document.getElementById('lihiBtn');
   btn.disabled = true;
   btn.innerHTML = '⏳ 建立中...';
-
-  // 用 shifu-toolbox proxy 轉發，繞過 CORS
-  const PROXY = 'https://shifu-toolbox-mcp.shifu-tw.workers.dev/lihi';
   const TOKEN = 'pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R';
-
   try {
-    const res = await fetch(PROXY, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Lihi-Token': TOKEN
-      },
-      body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const shortUrl = data.url || data.short_url;
-      if (shortUrl) {
-        document.getElementById('lihiResult').className = 'lihi-result show';
-        document.getElementById('lihiUrl').textContent = shortUrl;
-        saveHistory(url, shortUrl);
-        showToast('⚡ Lihi 短網址建立成功！');
-        btn.disabled = false;
-        btn.innerHTML = '⚡ 建立 Lihi 短網址';
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // Proxy 不通，直接呼叫 Lihi API（需工具已發布到正式域名）
-  try {
-    const res = await fetch('https://app.lihi.io/v1/url', {
+    const res = await fetch('https://app.lihi.io/api/v1/url', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -734,10 +704,8 @@ async function createLihi() {
       },
       body: JSON.stringify({ longUrl: url, tags: 'shifu-utm' })
     });
-
     const data = await res.json();
     const shortUrl = data.url || data.short_url;
-
     if (shortUrl) {
       document.getElementById('lihiResult').className = 'lihi-result show';
       document.getElementById('lihiUrl').textContent = shortUrl;
@@ -747,12 +715,9 @@ async function createLihi() {
       throw new Error(data.message || JSON.stringify(data));
     }
   } catch(e) {
-    // 最後備案：開 Lihi 網頁讓使用者手動貼
-    const encoded = encodeURIComponent(url);
-    window.open('https://app.lihi.io/admin/links/create?url=' + encoded, '_blank');
-    showToast('⚠️ 已開啟 Lihi，請手動確認建立', true);
+    console.error('Lihi error:', e);
+    showToast('⚠️ 建立失敗：' + e.message, true);
   }
-
   btn.disabled = false;
   btn.innerHTML = '⚡ 建立 Lihi 短網址';
 }
@@ -829,4 +794,4 @@ generate();
 </script>
 
 
-</body><mapify-window data-wxt-shadow-root="" style="position: relative; z-index: calc(infinity);"></mapify-window></html>
+<mapify-window data-wxt-shadow-root="" style="position: relative; z-index: calc(infinity);"></mapify-window></body></html>
