@@ -289,7 +289,8 @@
 
     <div class="field">
       <label class="field-label">目標網址</label>
-      <input type="text" id="baseUrl" value="https://shifu.tw/Course/Details/" placeholder="https://shifu.tw/Course/Details/xxx">
+      <input type="text" id="baseUrl" value="https://shifu.tw/course/details/" placeholder="https://shifu.tw/course/details/xxx">
+      <div class="chips" id="slugChips" style="margin-top:8px;"></div>
     </div>
 
     <div class="field">
@@ -396,6 +397,7 @@ const SOURCE_MEDIUMS = {
 const PROJECTS = ['rich','joey_short','Hgym','superai','paddy','rifat','simple','stock-ta','freedom'];
 const FORMATS = ['trailer','shorts','preview','ppal','post','video','stories','gif'];
 const CONTENTS = ['story-success','story-case','know-one','know-multi','countdown'];
+const SLUGS = ['office','japanese2','rifat','flower','Hgym','rich','simple','shorts','writing','stock-taf','freedom'];
 
 let state = {
   source: '',
@@ -609,7 +611,7 @@ function clearHistory() {
 
 function resetAll() {
   state = { source: '', medium: '', project: '', format: '', content: '' };
-  document.getElementById('baseUrl').value = 'https://shifu.tw/Course/Details/';
+  document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/';
   const d = new Date();
   document.getElementById('dateInput').value =
     String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
@@ -646,12 +648,29 @@ function showToast(msg) {
   });
 });
 
+// Slug quick buttons
+function renderSlugChips() {
+  const c = document.getElementById('slugChips');
+  c.innerHTML = '';
+  SLUGS.forEach(slug => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = slug;
+    chip.onclick = () => {
+      document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/' + slug;
+      updatePreview();
+    };
+    c.appendChild(chip);
+  });
+}
+
 // Init
 renderChips('sourceChips', SOURCES, 'source', false);
 renderChips('mediumChips', [], 'medium', false);
 renderChips('projectChips', PROJECTS, 'project', false);
 renderChips('formatChips', FORMATS, 'format', true);
 renderChips('contentChips', CONTENTS, 'content', true);
+renderSlugChips();
 updatePreview();
 renderHistory();
 </script>
