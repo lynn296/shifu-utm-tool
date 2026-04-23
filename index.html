@@ -487,6 +487,11 @@
       <label class="field-label">其他備註（選填）</label>
       <input type="text" id="noteInput" placeholder="自由輸入">
     </div>
+
+    <div class="field">
+      <label class="field-label">Lihi 標籤（用於 Lihi 後台分類，多標籤用逗號分隔）</label>
+      <input type="text" id="lihiTags" value="shifu-utm" placeholder="shifu-utm,課程名,投手">
+    </div>
   </div>
 </div>
 </div>
@@ -696,7 +701,7 @@ async function createLihi() {
         'Content-Type': 'application/json',
         'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
       },
-      body: JSON.stringify({ longUrl: url, tags: 'shifu-utm', domain: 'shifuclass.com' })
+      body: JSON.stringify({ longUrl: url, tags: (document.getElementById('lihiTags').value.trim() || 'shifu-utm'), domain: 'shifuclass.com' })
     });
     const data = await res.json();
     if (data.result === 'success' && data.url) {
@@ -821,6 +826,7 @@ function resetAll() {
   document.getElementById('projectCustom').value = '';
   document.getElementById('kolName').value = '';
   document.getElementById('noteInput').value = '';
+  document.getElementById('lihiTags').value = 'shifu-utm';
   document.getElementById('kolWrap').classList.remove('show');
   document.getElementById('campaignSourceAuto').textContent = '—';
   document.getElementById('lihiResult').classList.remove('show');
