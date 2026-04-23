@@ -5,113 +5,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShiFu UTM 產生器</title>
 <style>
+  :root {
+    --shifu-red: #EA1345;
+    --shifu-red-dark: #c50f38;
+    --shifu-black: #272727;
+    --shifu-gray: #484848;
+    --shifu-bg: #F4F4F4;
+    --card-bg: #ffffff;
+    --text: #272727;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --border-soft: #f0f0f0;
+    --positive: #0a9e60;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
     font-weight: 700;
-    background: #f5f4ef;
-    color: #1a1a1a;
-    padding: 24px;
+    background: var(--shifu-bg);
+    color: var(--text);
+    padding: 0 0 40px;
     min-height: 100vh;
+    line-height: 1.6;
   }
+  /* Header 品牌列 */
+  .brand-header {
+    background: var(--shifu-black);
+    color: #fff;
+    padding: 22px 32px;
+    position: relative;
+    margin-bottom: 28px;
+  }
+  .brand-header::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 6px; height: 100%;
+    background: var(--shifu-red);
+  }
+  .brand-header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-header h1 {
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .brand-tag {
+    background: var(--shifu-red);
+    color: #fff;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    max-width: 1100px;
-    margin: 0 auto;
     align-items: start;
   }
   .card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 28px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 26px 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   }
   .card-sticky {
     position: sticky;
     top: 24px;
   }
   .card-title {
-    font-size: 15px;
-    color: #666;
-    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--shifu-black);
+    margin-bottom: 18px;
+    padding-left: 10px;
+    border-left: 3px solid var(--shifu-red);
+    letter-spacing: 1px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
   .field { margin-bottom: 18px; }
   .field:last-child { margin-bottom: 0; }
   .field-label {
-    font-size: 13px;
-    color: #555;
+    font-size: 12px;
+    color: var(--shifu-gray);
     margin-bottom: 8px;
     display: block;
+    letter-spacing: 0.5px;
   }
   input[type="text"] {
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid #e5e5e0;
-    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 700;
     font-family: inherit;
-    background: #fafaf8;
-    transition: border-color 0.2s;
+    background: #fff;
+    transition: all 0.2s;
     outline: none;
+    color: var(--text);
   }
   input[type="text"]:focus {
-    border-color: #c4a87c;
+    border-color: var(--shifu-red);
+    box-shadow: 0 0 0 3px rgba(234,19,69,0.08);
   }
   .chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
   .chip {
-    padding: 7px 14px;
-    border-radius: 20px;
-    border: 2px solid #e5e5e0;
-    background: #fafaf8;
+    padding: 6px 13px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    background: #fff;
     font-size: 13px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.15s;
-    color: #555;
+    color: var(--shifu-gray);
     user-select: none;
   }
-  .chip:hover { border-color: #c4a87c; color: #1a1a1a; }
-  .chip.active {
-    background: #1a1a1a;
-    color: #fff;
-    border-color: #1a1a1a;
+  .chip:hover {
+    border-color: var(--shifu-red);
+    color: var(--shifu-red);
   }
-  .chip.active:hover { background: #333; border-color: #333; }
+  .chip.active {
+    background: var(--shifu-red);
+    color: #fff;
+    border-color: var(--shifu-red);
+  }
+  .chip.active:hover {
+    background: var(--shifu-red-dark);
+    border-color: var(--shifu-red-dark);
+  }
   .output-section {
     max-width: 1100px;
     margin: 20px auto 0;
+    padding: 0 20px;
   }
   .output-card {
-    background: #fff;
-    border-radius: 16px;
+    background: var(--card-bg);
+    border-radius: 10px;
     padding: 28px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--shifu-red);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   }
   .url-preview {
-    background: #fafaf8;
-    border: 2px solid #e5e5e0;
-    border-radius: 10px;
+    background: #fafafa;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
     padding: 14px 16px;
     font-size: 13px;
     word-break: break-all;
     line-height: 1.7;
     font-weight: 700;
     min-height: 44px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
   }
-  .url-preview .param-source { color: #e07c3e; }
+  .url-preview .param-source { color: #d97706; }
   .url-preview .param-medium { color: #7c3ebd; }
-  .url-preview .param-campaign { color: #2e8b57; }
-  .url-preview .param-base { color: #888; }
+  .url-preview .param-campaign { color: var(--positive); }
+  .url-preview .param-base { color: var(--text-muted); }
   .buttons {
     display: flex;
     gap: 10px;
@@ -120,7 +184,7 @@
   }
   .btn {
     padding: 10px 20px;
-    border-radius: 10px;
+    border-radius: 6px;
     border: none;
     font-size: 14px;
     font-weight: 700;
@@ -129,26 +193,33 @@
     transition: all 0.15s;
   }
   .btn-primary {
-    background: #1a1a1a;
+    background: var(--shifu-black);
     color: #fff;
   }
-  .btn-primary:hover { background: #333; }
+  .btn-primary:hover { background: #000; }
   .btn-secondary {
-    background: #f0efe9;
-    color: #1a1a1a;
-    border: 2px solid #e5e5e0;
+    background: #fff;
+    color: var(--shifu-gray);
+    border: 1.5px solid var(--border);
   }
-  .btn-secondary:hover { background: #e5e4de; }
+  .btn-secondary:hover {
+    border-color: var(--shifu-gray);
+    color: var(--shifu-black);
+  }
   .btn-lihi {
-    background: #2e8b57;
+    background: var(--shifu-red);
     color: #fff;
   }
-  .btn-lihi:hover { background: #267a4a; }
+  .btn-lihi:hover { background: var(--shifu-red-dark); }
   .btn-lihi-manual {
-    background: #c4a87c;
+    background: #fff;
+    color: var(--shifu-red);
+    border: 1.5px solid var(--shifu-red);
+  }
+  .btn-lihi-manual:hover {
+    background: var(--shifu-red);
     color: #fff;
   }
-  .btn-lihi-manual:hover { background: #b09568; }
   .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -156,9 +227,9 @@
   .lihi-result {
     margin-top: 14px;
     padding: 12px 16px;
-    background: #f0faf4;
-    border: 2px solid #b5e2c8;
-    border-radius: 10px;
+    background: #fff1f4;
+    border: 1.5px solid #fccfd9;
+    border-radius: 6px;
     font-size: 13px;
     display: none;
     align-items: center;
@@ -167,15 +238,16 @@
   }
   .lihi-result.show { display: flex; }
   .lihi-result a {
-    color: #2e8b57;
+    color: var(--shifu-red);
     text-decoration: none;
+    font-weight: 700;
   }
   .lihi-result a:hover { text-decoration: underline; }
   .lihi-copy-btn {
     padding: 4px 12px;
-    border-radius: 6px;
+    border-radius: 4px;
     border: none;
-    background: #2e8b57;
+    background: var(--shifu-red);
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -183,12 +255,15 @@
     white-space: nowrap;
     font-family: inherit;
   }
+  .lihi-copy-btn:hover { background: var(--shifu-red-dark); }
   .history-section {
-    margin-top: 20px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
   }
   .history-title {
     font-size: 13px;
-    color: #666;
+    color: var(--shifu-gray);
     margin-bottom: 10px;
     display: flex;
     align-items: center;
@@ -201,31 +276,36 @@
   }
   .history-item {
     padding: 10px 14px;
-    background: #fafaf8;
-    border: 1px solid #e5e5e0;
-    border-radius: 8px;
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
     font-size: 12px;
     word-break: break-all;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.15s;
     line-height: 1.5;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
   }
-  .history-item:hover { background: #f0efe9; }
+  .history-item:hover {
+    background: #fff;
+    border-color: var(--shifu-red);
+  }
   .toast {
     position: fixed;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(80px);
-    background: #1a1a1a;
+    background: var(--shifu-black);
     color: #fff;
     padding: 10px 24px;
-    border-radius: 10px;
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 700;
     opacity: 0;
     transition: all 0.3s;
     z-index: 999;
     pointer-events: none;
+    border-left: 3px solid var(--shifu-red);
   }
   .toast.show {
     opacity: 1;
@@ -238,11 +318,13 @@
   .kol-input-wrap.show { display: block; }
   .campaign-source-auto {
     display: inline-block;
-    padding: 7px 14px;
-    border-radius: 20px;
-    background: #e8e8e3;
+    padding: 6px 13px;
+    border-radius: 4px;
+    background: #fff1f4;
+    border: 1.5px solid #fccfd9;
     font-size: 13px;
-    color: #1a1a1a;
+    color: var(--shifu-red);
+    font-weight: 700;
   }
   .custom-input-row {
     display: flex;
@@ -258,30 +340,35 @@
   .lihi-error {
     margin-top: 10px;
     padding: 10px 14px;
-    background: #fdf0f0;
-    border: 2px solid #e8b4b4;
-    border-radius: 10px;
+    background: #fff1f4;
+    border: 1.5px solid var(--shifu-red);
+    border-radius: 6px;
     font-size: 13px;
-    color: #a33;
+    color: var(--shifu-red);
     display: none;
   }
   .lihi-error.show { display: block; }
-  .page-title {
-    max-width: 1100px;
-    margin: 0 auto 16px;
-    font-size: 22px;
-    color: #1a1a1a;
-  }
   @media (max-width: 768px) {
-    body { padding: 14px; }
+    body { padding: 0 0 24px; }
+    .brand-header { padding: 16px 20px; margin-bottom: 16px; }
+    .brand-header h1 { font-size: 18px; }
+    .container { padding: 0 14px; }
+    .output-section { padding: 0 14px; }
     .grid { grid-template-columns: 1fr; }
+    .card-sticky { position: static; }
   }
 </style>
 </head>
 <body>
 
-<h1 class="page-title">ShiFu UTM 生產器</h1>
+<header class="brand-header">
+  <div class="brand-header-inner">
+    <h1>ShiFu UTM 生產器</h1>
+    <span class="brand-tag">MARKETING</span>
+  </div>
+</header>
 
+<div class="container">
 <div class="grid">
   <!-- 左側：基本設定 -->
   <div class="card card-sticky">
@@ -346,6 +433,7 @@
       <input type="text" id="noteInput" placeholder="自由輸入">
     </div>
   </div>
+</div>
 </div>
 
 <!-- 輸出區 -->
