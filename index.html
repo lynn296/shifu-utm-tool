@@ -735,9 +735,9 @@ function searchOnLihi() {
   const campaign = getCampaign();
   if (!campaign) return showToast('請先填寫 Campaign 欄位');
   navigator.clipboard.writeText(campaign).then(() => {
-    showToast('Campaign 已複製！在 Lihi 按「進階搜尋」貼到 UTM 欄位');
+    showToast('Campaign 已複製！API 建立的連結在「網址列表」頁');
     setTimeout(() => {
-      window.open('https://app.lihi.io/admin', '_blank');
+      window.open('https://app.lihi.io/admin/apiList', '_blank');
     }, 500);
   });
 }
