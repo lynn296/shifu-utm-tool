@@ -760,7 +760,7 @@ function clearHistory() {
 }
 
 // 許願箱 - 請填入 Google Chat Incoming Webhook URL
-const WISH_WEBHOOK_URL = '';
+const WISH_WEBHOOK_URL = 'https://chat.googleapis.com/v1/spaces/AAQAu0godbg/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=TrgfCJNylv-0pSZ9mt_euE-qFRBKzkG1iJHke1JRGKk';
 
 async function submitWish() {
   const name = document.getElementById('wishName').value.trim() || '匿名';
@@ -777,6 +777,7 @@ async function submitWish() {
   try {
     await fetch(WISH_WEBHOOK_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
