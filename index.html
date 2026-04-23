@@ -348,6 +348,51 @@
     display: none;
   }
   .lihi-error.show { display: block; }
+  .wish-card {
+    background: linear-gradient(135deg, #fff 0%, #fff8fa 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--shifu-red);
+    border-radius: 10px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+  .wish-header { margin-bottom: 16px; }
+  .wish-title {
+    font-size: 16px;
+    color: var(--shifu-black);
+    margin-bottom: 4px;
+  }
+  .wish-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .wish-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .wish-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    background: #fff;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: all 0.2s;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wish-form textarea:focus {
+    border-color: var(--shifu-red);
+    box-shadow: 0 0 0 3px rgba(234,19,69,0.08);
+  }
+  .wish-form button { align-self: flex-start; }
   @media (max-width: 768px) {
     body { padding: 0 0 24px; }
     .brand-header { padding: 16px 20px; margin-bottom: 16px; }
@@ -461,6 +506,23 @@
         <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="clearHistory()">清除紀錄</button>
       </div>
       <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 許願箱 -->
+<div class="output-section">
+  <div class="wish-card">
+    <div class="wish-header">
+      <div>
+        <div class="wish-title">💡 工具許願箱</div>
+        <div class="wish-subtitle">有想要的新功能？填下來，會直接發到 Lynn 的 Google Chat</div>
+      </div>
+    </div>
+    <div class="wish-form">
+      <input type="text" id="wishName" placeholder="你的名字（選填）">
+      <textarea id="wishContent" placeholder="想要什麼功能？遇到什麼問題？盡量寫～" rows="3"></textarea>
+      <button class="btn btn-lihi" id="wishBtn" onclick="submitWish()">送出許願</button>
     </div>
   </div>
 </div>
@@ -695,6 +757,37 @@ function copyHistoryItem(el) {
 function clearHistory() {
   localStorage.removeItem('shifu_utm_history');
   renderHistory();
+}
+
+// 許願箱 - 請填入 Google Chat Incoming Webhook URL
+const WISH_WEBHOOK_URL = '';
+
+async function submitWish() {
+  const name = document.getElementById('wishName').value.trim() || '匿名';
+  const content = document.getElementById('wishContent').value.trim();
+  const btn = document.getElementById('wishBtn');
+  if (!content) return showToast('請寫下你想許什麼願');
+  if (!WISH_WEBHOOK_URL) {
+    showToast('Webhook 尚未設定，請聯絡 Lynn');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+  const text = `🌟 *UTM 工具許願* 🌟\n*來自：* ${name}\n*時間：* ${new Date().toLocaleString('zh-TW')}\n*內容：*\n${content}`;
+  try {
+    await fetch(WISH_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    showToast('許願成功！謝謝你 💕');
+    document.getElementById('wishName').value = '';
+    document.getElementById('wishContent').value = '';
+  } catch (e) {
+    showToast('送出失敗：' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '送出許願';
 }
 
 function resetAll() {
