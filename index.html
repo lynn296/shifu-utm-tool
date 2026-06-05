@@ -99,7 +99,9 @@
     display: block;
     letter-spacing: 0.5px;
   }
-  input[type="text"] {
+  input[type="text"],
+  input[type="password"],
+  textarea {
     width: 100%;
     padding: 10px 14px;
     border: 1.5px solid var(--border);
@@ -112,9 +114,16 @@
     outline: none;
     color: var(--text);
   }
-  input[type="text"]:focus {
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  textarea:focus {
     border-color: var(--shifu-red);
     box-shadow: 0 0 0 3px rgba(234,19,69,0.08);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
   }
   .chips {
     display: flex;
@@ -358,6 +367,56 @@
     display: none;
   }
   .lihi-error.show { display: block; }
+  .batch-helper {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+  .batch-status {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  .batch-table-wrap {
+    margin-top: 16px;
+    overflow-x: auto;
+  }
+  .batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .batch-table th,
+  .batch-table td {
+    border-bottom: 1px solid var(--border-soft);
+    padding: 10px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .batch-table th {
+    color: var(--shifu-gray);
+    background: #fafafa;
+  }
+  .batch-table a {
+    color: var(--shifu-red);
+    text-decoration: none;
+  }
+  .batch-table a:hover { text-decoration: underline; }
+  .batch-url-cell {
+    min-width: 280px;
+    word-break: break-all;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 700;
+  }
+  .batch-empty {
+    color: #aaa;
+    font-size: 12px;
+    padding: 14px;
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
   .wish-card {
     background: linear-gradient(135deg, #fff 0%, #fff8fa 100%);
     border: 1px solid var(--border);
@@ -525,6 +584,31 @@
   </div>
 </div>
 
+<!-- 批次縮網址區 -->
+<div class="output-section">
+  <div class="output-card">
+    <div class="card-title">批次縮短 UTM 網址</div>
+
+    <div class="field">
+      <label class="field-label">每行一筆完整 UTM URL</label>
+      <textarea id="batchUrlList" placeholder="https://shifu.tw/course/details/rich?affcode=0605_rich_fb&utm_source=fb&utm_medium=ads&utm_campaign=0605_rich_fb
+https://shifu.tw/course/details/simple?affcode=0605_simple_ig&utm_source=ig&utm_medium=post&utm_campaign=0605_simple_ig"></textarea>
+      <div class="batch-helper">這裡直接貼已經帶好 affcode / utm_source / utm_medium / utm_campaign 的完整網址。</div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn btn-lihi" id="batchStartBtn" onclick="createBatchLihi()">開始批次縮短</button>
+      <button class="btn btn-secondary" id="batchCopyAllBtn" onclick="copyBatchLihi()" disabled>複製全部短網址</button>
+      <button class="btn btn-secondary" id="batchClearBtn" onclick="clearBatchLihi()">清空批次</button>
+    </div>
+
+    <div class="batch-status" id="batchStatus"></div>
+    <div class="batch-table-wrap" id="batchTableWrap">
+      <div class="batch-empty">尚未處理批次網址。</div>
+    </div>
+  </div>
+</div>
+
 <!-- 許願箱 -->
 <div class="output-section">
   <div class="wish-card">
@@ -563,6 +647,8 @@ const PROJECTS = ['rich','joey_short','Hgym','superai','paddy','rifat','simple',
 const FORMATS = ['trailer','shorts','preview','ppal','post','video','stories','gif'];
 const CONTENTS = ['story-success','story-case','know-one','know-multi','countdown'];
 const SLUGS = ['office','japanese2','rifat','flower','Hgym','rich','simple','shorts','writing','stock-taf','freedom'];
+const LIHI_API_BASE = 'https://app.lihi.io/api/v1';
+const LIHI_API_KEY = 'pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R';
 
 let state = {
   source: '',
@@ -571,6 +657,7 @@ let state = {
   format: '',
   content: ''
 };
+let batchResults = [];
 
 // Init date
 const now = new Date();
@@ -699,7 +786,7 @@ async function createLihi() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
+        'Authorization': `x-api-key:${LIHI_API_KEY}`
       },
       body: JSON.stringify({ longUrl: url, tags: document.getElementById('lihiTags').value.trim(), domain: 'shifuclass.com' })
     });
@@ -774,6 +861,132 @@ function renderHistory() {
 
 function escAttr(s) {
   return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function parseBatchInput(text) {
+  return text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(url => ({ original: url, status: 'pending', shortUrl: '', error: '' }));
+}
+
+function isValidHttpUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
+}
+
+async function lihiBatchFetch(method, path, params, body) {
+  let url = LIHI_API_BASE + path;
+  if (params) {
+    const qs = new URLSearchParams(params).toString();
+    url += (url.includes('?') ? '&' : '?') + qs;
+  }
+  const headers = {
+    'Authorization': `x-api-key:${LIHI_API_KEY}`
+  };
+  let fetchBody;
+  if (body) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    fetchBody = new URLSearchParams(body).toString();
+  }
+  const res = await fetch(url, { method, headers, body: fetchBody });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.result === 'failed') {
+    const msg = data?.msg?.error || data?.message || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function createBatchShortLink(item) {
+  const data = await lihiBatchFetch('POST', '/url', null, { longUrl: item.original });
+  return data.url || '';
+}
+
+function setBatchRunning(running) {
+  document.getElementById('batchStartBtn').disabled = running;
+  document.getElementById('batchClearBtn').disabled = running;
+  document.getElementById('batchCopyAllBtn').disabled =
+    running || !batchResults.some(r => r.shortUrl);
+}
+
+function renderBatchResults() {
+  const wrap = document.getElementById('batchTableWrap');
+  const copyBtn = document.getElementById('batchCopyAllBtn');
+  copyBtn.disabled = !batchResults.some(r => r.shortUrl);
+  if (!batchResults.length) {
+    wrap.innerHTML = '<div class="batch-empty">尚未處理批次網址。</div>';
+    return;
+  }
+  const rows = batchResults.map((r, i) => {
+    const shortUrl = r.shortUrl
+      ? '<a href="' + escAttr(r.shortUrl) + '" target="_blank">' + escHtml(r.shortUrl) + '</a>'
+      : '—';
+    const status = r.status === 'success' ? '完成' : r.status === 'error' ? '失敗' : r.status === 'running' ? '處理中' : '等待';
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td class="batch-url-cell">' + escHtml(r.original) + '</td>' +
+      '<td class="batch-url-cell">' + shortUrl + '</td>' +
+      '<td>' + status + (r.error ? '<div class="lihi-error show">' + escHtml(r.error) + '</div>' : '') + '</td>' +
+      '</tr>';
+  }).join('');
+  wrap.innerHTML = '<table class="batch-table">' +
+    '<thead><tr><th>#</th><th>完整 UTM URL</th><th>Lihi 短網址</th><th>狀態</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+}
+
+async function createBatchLihi() {
+  const items = parseBatchInput(document.getElementById('batchUrlList').value);
+  if (!items.length) return showToast('請先貼上完整 UTM URL');
+  const invalidIndex = items.findIndex(item => !isValidHttpUrl(item.original));
+  if (invalidIndex >= 0) {
+    showToast('第 ' + (invalidIndex + 1) + ' 行網址格式錯誤');
+    return;
+  }
+
+  batchResults = items;
+  renderBatchResults();
+  setBatchRunning(true);
+  const statusEl = document.getElementById('batchStatus');
+
+  for (let i = 0; i < batchResults.length; i++) {
+    const item = batchResults[i];
+    item.status = 'running';
+    statusEl.textContent = '縮網址中（' + (i + 1) + ' / ' + batchResults.length + '）';
+    renderBatchResults();
+    try {
+      item.shortUrl = await createBatchShortLink(item);
+      item.status = 'success';
+    } catch (e) {
+      item.status = 'error';
+      item.error = e.message || '未知錯誤';
+    }
+    renderBatchResults();
+  }
+
+  const ok = batchResults.filter(r => r.shortUrl).length;
+  statusEl.textContent = '完成：共 ' + batchResults.length + ' 筆，成功 ' + ok + ' 筆';
+  setBatchRunning(false);
+}
+
+function copyBatchLihi() {
+  const text = batchResults.filter(r => r.shortUrl).map(r => r.shortUrl).join('\n');
+  if (!text) return showToast('沒有可複製的短網址');
+  navigator.clipboard.writeText(text).then(() => showToast('已複製全部短網址！'));
+}
+
+function clearBatchLihi() {
+  document.getElementById('batchUrlList').value = '';
+  document.getElementById('batchStatus').textContent = '';
+  batchResults = [];
+  renderBatchResults();
+  setBatchRunning(false);
 }
 
 function copyHistoryItem(el) {
