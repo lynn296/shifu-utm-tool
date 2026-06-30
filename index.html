@@ -220,6 +220,12 @@
     background: var(--shifu-red);
     color: #fff;
   }
+  .btn-lihi3 {
+    background: var(--shifu-black);
+    color: #fff;
+    border: 1.5px solid var(--shifu-black);
+  }
+  .btn-lihi3:hover { background: #000; border-color: #000; }
   .btn-search {
     background: #fff;
     color: var(--shifu-gray);
@@ -505,6 +511,7 @@
     <div class="buttons">
       <button class="btn btn-primary" onclick="copyUrl()">複製網址</button>
       <button class="btn btn-lihi" id="lihiBtn" onclick="createLihi()">產出 Lihi 短連結</button>
+      <button class="btn btn-lihi3" id="lihi3Btn" onclick="createLihi3()">產出 lihi3 短連結</button>
       <button class="btn btn-search" onclick="searchOnLihi()">🔍 到 Lihi 找此連結</button>
       <button class="btn btn-secondary" onclick="resetAll()">清除重填</button>
     </div>
@@ -562,7 +569,7 @@ const SOURCE_MEDIUMS = {
 const PROJECTS = ['rich','joey_short','Hgym','superai','paddy','rifat','simple','stock-ta','freedom'];
 const FORMATS = ['trailer','shorts','preview','ppal','post','video','stories','gif'];
 const CONTENTS = ['story-success','story-case','know-one','know-multi','countdown'];
-const SLUGS = ['office','japanese2','rifat','flower','Hgym','rich','simple','shorts','writing','stock-taf','freedom'];
+const SLUGS = ['office','japanese2','rifat','flower','Hgym','rich','simple','shorts','writing','stock-taf','freedom','1G'];
 
 let state = {
   source: '',
@@ -685,10 +692,10 @@ function copyUrl() {
   });
 }
 
-async function createLihi() {
+async function createLihiWithDomain(domain, btnId, btnLabel) {
   const url = getFullUrl();
   if (!url) return showToast('請先完成欄位填寫');
-  const btn = document.getElementById('lihiBtn');
+  const btn = document.getElementById(btnId);
   const errEl = document.getElementById('lihiError');
   btn.disabled = true;
   btn.textContent = '建立中…';
@@ -701,7 +708,7 @@ async function createLihi() {
         'Content-Type': 'application/json',
         'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
       },
-      body: JSON.stringify({ longUrl: url, tags: document.getElementById('lihiTags').value.trim(), domain: 'shifuclass.com' })
+      body: JSON.stringify({ longUrl: url, tags: document.getElementById('lihiTags').value.trim(), domain: domain })
     });
     const data = await res.json();
     if (data.result === 'success' && data.url) {
@@ -720,7 +727,15 @@ async function createLihi() {
     errEl.classList.add('show');
   }
   btn.disabled = false;
-  btn.textContent = '自動產出短連結';
+  btn.textContent = btnLabel;
+}
+
+function createLihi() {
+  return createLihiWithDomain('shifuclass.com', 'lihiBtn', '產出 Lihi 短連結');
+}
+
+function createLihi3() {
+  return createLihiWithDomain('lihi3.me', 'lihi3Btn', '產出 lihi3 短連結');
 }
 
 function createLihiManual() {
@@ -866,7 +881,14 @@ function renderSlugChips() {
     chip.className = 'chip';
     chip.textContent = slug;
     chip.onclick = () => {
-      document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/' + slug;
+      if (slug === '1G') {
+        document.getElementById('baseUrl').value = 'https://1gclass.tw/?';
+        document.getElementById('projectCustom').value = '1g';
+        state.project = '';
+        renderChips('projectChips', PROJECTS, 'project', false);
+      } else {
+        document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/' + slug;
+      }
       updatePreview();
     };
     c.appendChild(chip);
