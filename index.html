@@ -882,7 +882,7 @@ function renderSlugChips() {
     chip.textContent = slug;
     chip.onclick = () => {
       if (slug === '1G') {
-        document.getElementById('baseUrl').value = 'https://1gclass.tw/?';
+        document.getElementById('baseUrl').value = 'https://1gclass.tw/courses/1g?';
         document.getElementById('projectCustom').value = '1g';
         state.project = '';
         renderChips('projectChips', PROJECTS, 'project', false);
