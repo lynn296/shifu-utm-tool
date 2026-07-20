@@ -121,6 +121,15 @@
     flex-wrap: wrap;
     gap: 6px;
   }
+  .slug-group { margin-bottom: 10px; }
+  .slug-group:last-child { margin-bottom: 0; }
+  .slug-group-label {
+    font-size: 11px;
+    color: var(--shifu-red);
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
   .chip {
     padding: 6px 13px;
     border-radius: 4px;
@@ -569,7 +578,11 @@ const SOURCE_MEDIUMS = {
 const PROJECTS = ['rich','joey_short','Hgym','superai','paddy','rifat','simple','stock-ta','freedom'];
 const FORMATS = ['trailer','shorts','preview','ppal','post','video','stories','gif'];
 const CONTENTS = ['story-success','story-case','know-one','know-multi','countdown'];
-const SLUGS = ['office','japanese2','rifat','flower','Hgym','rich','simple','shorts','writing','stock-taf','freedom','jojo','1G'];
+const SLUG_GROUPS = [
+  { label: '高價課', prefix: 'https://shifu.tw/course/trial/', slugs: ['jojo','stock-taf','simple','shorts','company','nathantopsales','persuade','freedom'] },
+  { label: '標準課', prefix: 'https://shifu.tw/course/details/', slugs: ['paddy','flower','Hgym','house','communication','colanekojp'] },
+  { label: '其他', prefix: null, slugs: ['1G'] }
+];
 
 let state = {
   source: '',
@@ -876,22 +889,34 @@ function showToast(msg) {
 function renderSlugChips() {
   const c = document.getElementById('slugChips');
   c.innerHTML = '';
-  SLUGS.forEach(slug => {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = slug;
-    chip.onclick = () => {
-      if (slug === '1G') {
-        document.getElementById('baseUrl').value = 'https://1gclass.tw/courses/1g?';
-        document.getElementById('projectCustom').value = '1g';
-        state.project = '';
-        renderChips('projectChips', PROJECTS, 'project', false);
-      } else {
-        document.getElementById('baseUrl').value = 'https://shifu.tw/course/details/' + slug;
-      }
-      updatePreview();
-    };
-    c.appendChild(chip);
+  SLUG_GROUPS.forEach(group => {
+    const groupWrap = document.createElement('div');
+    groupWrap.className = 'slug-group';
+    const label = document.createElement('div');
+    label.className = 'slug-group-label';
+    label.textContent = group.label;
+    groupWrap.appendChild(label);
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    group.slugs.forEach(slug => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = slug;
+      chip.onclick = () => {
+        if (slug === '1G') {
+          document.getElementById('baseUrl').value = 'https://1gclass.tw/courses/1g?';
+          document.getElementById('projectCustom').value = '1g';
+          state.project = '';
+          renderChips('projectChips', PROJECTS, 'project', false);
+        } else {
+          document.getElementById('baseUrl').value = group.prefix + slug;
+        }
+        updatePreview();
+      };
+      chips.appendChild(chip);
+    });
+    groupWrap.appendChild(chips);
+    c.appendChild(groupWrap);
   });
 }
 
