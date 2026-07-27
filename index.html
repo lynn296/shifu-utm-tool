@@ -911,6 +911,11 @@ function renderSlugChips() {
           renderChips('projectChips', PROJECTS, 'project', false);
         } else {
           document.getElementById('baseUrl').value = group.prefix + slug;
+          document.getElementById('projectCustom').value = '';
+          if (PROJECTS.includes(slug)) {
+            state.project = slug;
+            renderChips('projectChips', PROJECTS, 'project', false);
+          }
         }
         updatePreview();
       };
