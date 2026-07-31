@@ -382,6 +382,82 @@
     padding: 24px 28px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   }
+  .pm-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--shifu-black);
+    border-radius: 10px;
+    padding: 26px 28px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+  .pm-header { margin-bottom: 16px; }
+  .pm-title {
+    font-size: 16px;
+    color: var(--shifu-black);
+    margin-bottom: 4px;
+  }
+  .pm-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .pm-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .pm-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pm-result-box, .pm-qr-box {
+    display: none;
+    margin-top: 14px;
+  }
+  .pm-result-box.show, .pm-qr-box.show { display: block; }
+  .pm-result-box {
+    padding: 12px 16px;
+    background: #fff1f4;
+    border: 1.5px solid #fccfd9;
+    border-radius: 6px;
+    font-size: 13px;
+    align-items: center;
+    gap: 10px;
+    word-break: break-all;
+  }
+  .pm-result-box.show { display: flex; }
+  .pm-result-box a {
+    color: var(--shifu-red);
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .pm-result-box a:hover { text-decoration: underline; }
+  .pm-qr-box {
+    padding: 20px;
+    background: #fafafa;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+  }
+  .pm-qr-box img {
+    max-width: 300px;
+    width: 100%;
+    height: auto;
+    background: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    display: block;
+    margin: 0 auto 14px;
+  }
+  .pm-qr-source {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    word-break: break-all;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
   .wish-header { margin-bottom: 16px; }
   .wish-title {
     font-size: 16px;
@@ -539,6 +615,25 @@
       </div>
       <div class="history-list" id="historyList"></div>
     </div>
+  </div>
+</div>
+
+<!-- PM 產連結區 -->
+<div class="output-section">
+  <div class="pm-card">
+    <div class="pm-header">
+      <div class="pm-title">🔗 PM 產連結區</div>
+      <div class="pm-subtitle">貼任何網址（站內站外皆可），一鍵產出 shifu 短連結和 QR Code</div>
+    </div>
+    <div class="pm-form">
+      <input type="text" id="pmUrl" placeholder="貼上要縮的網址，例如 https://...">
+      <div class="pm-buttons">
+        <button class="btn btn-lihi" id="pmLihiBtn" onclick="pmCreateLihi()">產出 shifu 短連結</button>
+        <button class="btn btn-primary" id="pmQrBtn" onclick="pmCreateQR()">產出 QR Code</button>
+      </div>
+    </div>
+    <div class="pm-result-box" id="pmLihiResult"></div>
+    <div class="pm-qr-box" id="pmQRResult"></div>
   </div>
 </div>
 
@@ -812,6 +907,71 @@ function copyHistoryItem(el) {
 function clearHistory() {
   localStorage.removeItem('shifu_utm_history');
   renderHistory();
+}
+
+// PM 產連結區
+async function pmCreateLihi() {
+  const url = document.getElementById('pmUrl').value.trim();
+  if (!url) return showToast('請貼上網址');
+  const btn = document.getElementById('pmLihiBtn');
+  btn.disabled = true;
+  btn.textContent = '建立中…';
+  try {
+    const res = await fetch('https://app.lihi.io/api/v1/url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
+      },
+      body: JSON.stringify({ longUrl: url, tags: '', domain: 'shifuclass.com' })
+    });
+    const data = await res.json();
+    if (data.result === 'success' && data.url) {
+      const box = document.getElementById('pmLihiResult');
+      box.innerHTML = '<span>短網址：<a href="' + data.url + '" target="_blank">' + data.url + '</a></span> <button class="lihi-copy-btn" onclick="pmCopyLihi(\'' + data.url + '\')">複製</button>';
+      box.classList.add('show');
+      addHistory(url);
+    } else {
+      showToast('建立失敗：' + (data.message || JSON.stringify(data)));
+    }
+  } catch (e) {
+    showToast('網路錯誤：' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '產出 shifu 短連結';
+}
+
+function pmCopyLihi(url) {
+  navigator.clipboard.writeText(url).then(() => showToast('短網址已複製！'));
+}
+
+function pmCreateQR() {
+  const url = document.getElementById('pmUrl').value.trim();
+  if (!url) return showToast('請貼上網址');
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=400x400&format=png&margin=10';
+  const box = document.getElementById('pmQRResult');
+  box.innerHTML =
+    '<img src="' + qrUrl + '" alt="QR Code">' +
+    '<div class="pm-qr-source">' + escHtml(url) + '</div>' +
+    '<button class="btn btn-primary" onclick="pmDownloadQR(\'' + qrUrl + '\')">下載 PNG</button>';
+  box.classList.add('show');
+}
+
+async function pmDownloadQR(qrUrl) {
+  try {
+    const res = await fetch(qrUrl);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'qrcode-' + Date.now() + '.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    showToast('QR Code 已下載！');
+  } catch (e) {
+    showToast('下載失敗：' + e.message);
+  }
 }
 
 // 許願箱 - 請填入 Google Chat Incoming Webhook URL
