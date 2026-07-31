@@ -627,6 +627,7 @@
     </div>
     <div class="pm-form">
       <input type="text" id="pmUrl" placeholder="貼上要縮的網址，例如 https://...">
+      <input type="text" id="pmLihiTags" placeholder="Lihi 標籤（選填，多標籤用逗號分隔，例如：課程名,活動）">
       <div class="pm-buttons">
         <button class="btn btn-lihi" id="pmLihiBtn" onclick="pmCreateLihi()">產出 shifu 短連結</button>
         <button class="btn btn-primary" id="pmQrBtn" onclick="pmCreateQR()">產出 QR Code</button>
@@ -923,7 +924,7 @@ async function pmCreateLihi() {
         'Content-Type': 'application/json',
         'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
       },
-      body: JSON.stringify({ longUrl: url, tags: '', domain: 'shifuclass.com' })
+      body: JSON.stringify({ longUrl: url, tags: document.getElementById('pmLihiTags').value.trim(), domain: 'shifuclass.com' })
     });
     const data = await res.json();
     if (data.result === 'success' && data.url) {
@@ -958,7 +959,7 @@ async function pmCreateQR() {
         'Content-Type': 'application/json',
         'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
       },
-      body: JSON.stringify({ longUrl: url, tags: '', domain: 'shifuclass.com' })
+      body: JSON.stringify({ longUrl: url, tags: document.getElementById('pmLihiTags').value.trim(), domain: 'shifuclass.com' })
     });
     const data = await res.json();
     if (data.result === 'success' && data.url) {
