@@ -945,16 +945,40 @@ function pmCopyLihi(url) {
   navigator.clipboard.writeText(url).then(() => showToast('短網址已複製！'));
 }
 
-function pmCreateQR() {
+async function pmCreateQR() {
   const url = document.getElementById('pmUrl').value.trim();
   if (!url) return showToast('請貼上網址');
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(url) + '&size=400x400&format=png&margin=10';
-  const box = document.getElementById('pmQRResult');
-  box.innerHTML =
-    '<img src="' + qrUrl + '" alt="QR Code">' +
-    '<div class="pm-qr-source">' + escHtml(url) + '</div>' +
-    '<button class="btn btn-primary" onclick="pmDownloadQR(\'' + qrUrl + '\')">下載 PNG</button>';
-  box.classList.add('show');
+  const btn = document.getElementById('pmQrBtn');
+  btn.disabled = true;
+  btn.textContent = '產生中…';
+  try {
+    const res = await fetch('https://app.lihi.io/api/v1/url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'x-api-key:pAFAeo4FkmAit7UM1Z5SzCzCvPy6S4aK9QO9tj2R'
+      },
+      body: JSON.stringify({ longUrl: url, tags: '', domain: 'shifuclass.com' })
+    });
+    const data = await res.json();
+    if (data.result === 'success' && data.url) {
+      const shortUrl = data.url;
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(shortUrl) + '&size=400x400&format=png&margin=10';
+      const box = document.getElementById('pmQRResult');
+      box.innerHTML =
+        '<img src="' + qrUrl + '" alt="QR Code">' +
+        '<div class="pm-qr-source">短網址：<a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a></div>' +
+        '<button class="btn btn-primary" onclick="pmDownloadQR(\'' + qrUrl + '\')">下載 PNG</button>';
+      box.classList.add('show');
+      addHistory(url);
+    } else {
+      showToast('建立失敗：' + (data.message || JSON.stringify(data)));
+    }
+  } catch (e) {
+    showToast('網路錯誤：' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '產出 QR Code';
 }
 
 async function pmDownloadQR(qrUrl) {
